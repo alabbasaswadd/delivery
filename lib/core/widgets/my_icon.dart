@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../constants/colors.dart';
 
-
 class MyIcon extends StatelessWidget {
   const MyIcon(
       {super.key,

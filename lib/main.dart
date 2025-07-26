@@ -1,28 +1,61 @@
-import 'package:delivery/screens/login.dart';
-import 'package:delivery/screens/order.dart';
-import 'package:delivery/screens/report.dart';
+import 'package:delivery/core/constants/functions.dart';
+import 'package:adaptive_theme/adaptive_theme.dart';
+import 'package:delivery/presentation/screens/splash.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:delivery/core/constants/theme.dart';
+import 'package:delivery/core/localization/translation.dart';
+import 'package:delivery/presentation/screens/auth/login.dart';
+import 'package:delivery/routes.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:get/get_navigation/src/root/get_material_app.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-void main() {
-  runApp(DeliveryApp());
+late String savedLanguage;
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await UserSession.init(); // تحميل بيانات المستخدم من SharedPreferences
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  savedLanguage = prefs.getString('language') ?? 'ar';
+  runApp(
+    ScreenUtilInit(
+      designSize: const Size(360, 690), // حجم التصميم الأساسي عندك
+      minTextAdapt: true,
+      builder: (context, child) {
+        return MyApp();
+      },
+    ),
+  );
 }
 
-class DeliveryApp extends StatelessWidget {
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'تطبيق التوصيل',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        fontFamily: 'Tajawal',
+    return AdaptiveTheme(
+      light: lightTheme,
+      dark: darkTheme,
+      initial: AdaptiveThemeMode.light,
+      builder: (theme, darkTheme) => GetMaterialApp(
+        localizationsDelegates: const [
+          GlobalWidgetsLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: const [
+          Locale('en', ''),
+          Locale('ar', ''),
+        ],
+        locale: Locale(savedLanguage),
+        translations: AppTranslations(),
+        theme: theme,
+        darkTheme: darkTheme,
+        routes: routes,
+        debugShowCheckedModeBanner: false,
+        initialRoute: Splash.id,
       ),
-      initialRoute: '/login',
-      routes: {
-        '/login': (context) => ProfessionalLoginScreen(),
-        '/orders': (context) => OrdersScreen(),
-        '/report': (context) => CustomerReportsScreen(),
-      },
     );
   }
 }

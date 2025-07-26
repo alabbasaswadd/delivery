@@ -1,6 +1,6 @@
-import 'package:delivery/models.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:delivery/data/model/customer/customer_data_model.dart';
 
 class CustomerReportsScreen extends StatefulWidget {
   @override
@@ -8,8 +8,8 @@ class CustomerReportsScreen extends StatefulWidget {
 }
 
 class _CustomerReportsScreenState extends State<CustomerReportsScreen> {
-  List<Customer> customers = [];
-  List<Customer> filteredCustomers = [];
+  List<CustomerDataModel> customers = [];
+  List<CustomerDataModel> filteredCustomers = [];
   DateTimeRange? dateRange;
   String searchQuery = '';
   bool isLoading = true;
@@ -21,12 +21,11 @@ class _CustomerReportsScreenState extends State<CustomerReportsScreen> {
   }
 
   Future<void> _loadCustomers() async {
-    // في التطبيق الحقيقي، هذه البيانات ستأتي من API
     await Future.delayed(Duration(seconds: 1));
 
     setState(() {
       customers = [
-        Customer(
+        CustomerDataModel(
           id: '1',
           name: 'أحمد محمد',
           email: 'ahmed@example.com',
@@ -34,9 +33,9 @@ class _CustomerReportsScreenState extends State<CustomerReportsScreen> {
           joinDate: DateTime(2023, 1, 15),
           orderCount: 12,
           totalSpending: 4500.0,
-          lastOrderDate: '2023-10-05',
+          lastOrderDate: DateTime(2023, 10, 5),
         ),
-        Customer(
+        CustomerDataModel(
           id: '2',
           name: 'سارة علي',
           email: 'sara@example.com',
@@ -44,9 +43,8 @@ class _CustomerReportsScreenState extends State<CustomerReportsScreen> {
           joinDate: DateTime(2023, 3, 22),
           orderCount: 8,
           totalSpending: 3200.0,
-          lastOrderDate: '2023-09-28',
+          lastOrderDate: DateTime(2023, 9, 28),
         ),
-        // يمكن إضافة المزيد من الزبائن
       ];
       filteredCustomers = customers;
       isLoading = false;
@@ -87,8 +85,6 @@ class _CustomerReportsScreenState extends State<CustomerReportsScreen> {
   }
 
   void _exportToExcel() {
-    // هنا كود تصدير البيانات لملف Excel
-    // يمكن استخدام حزمة مثل excel أو syncfusion_flutter_xlsio
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('تم تصدير البيانات بنجاح')),
     );
@@ -193,7 +189,9 @@ class _CustomerReportsScreenState extends State<CustomerReportsScreen> {
             DataCell(Text(DateFormat('yyyy/MM/dd').format(customer.joinDate))),
             DataCell(Text(customer.orderCount.toString())),
             DataCell(Text('${customer.totalSpending.toStringAsFixed(2)} ر.س')),
-            DataCell(Text(customer.lastOrderDate ?? 'لا يوجد')),
+            DataCell(Text(customer.lastOrderDate != null
+                ? DateFormat('yyyy/MM/dd').format(customer.lastOrderDate!)
+                : 'لا يوجد')),
           ]);
         }).toList(),
       ),
