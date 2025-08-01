@@ -47,10 +47,11 @@ class OrderCubit extends Cubit<OrderState> {
   void getOrders() async {
     try {
       emit(OrderLoading());
-      final response = await repository.getOrdersRepository();
+      final response = await repository.getDeliveriesRepository();
       print(response.statusCode);
-      print(response.data['data']);
-
+      print(response.statusMessage);
+      print(response.data);
+      print(response.data);
       if (response.statusCode == 200 &&
           response.data != null &&
           response.data['succeeded'] == true) {
@@ -62,14 +63,13 @@ class OrderCubit extends Cubit<OrderState> {
         if (orders.isEmpty) {
           emit(OrderEmpty());
         } else {
-          emit(OrderLoaded(
-              orders)); // هذا يتطلب أن OrderLoaded تستقبل List<OrderDataModel>
+          emit(OrderLoaded(orders));
         }
       } else {
         emit(OrderEmpty());
       }
     } catch (e) {
-      emit(OrderError("العذر من الباك: $e"));
+      emit(OrderError("فشل تحميل الطلبات: $e"));
     }
   }
 

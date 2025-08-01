@@ -3,13 +3,14 @@ import 'package:delivery/data/model/order/order_items_model.dart';
 import 'package:delivery/data/model/shop/shop_data_model.dart';
 import 'package:json_annotation/json_annotation.dart';
 
+
 part 'order_data_model.g.dart';
 
 @JsonSerializable(includeIfNull: false)
 class OrderDataModel {
   final String? id;
   final String? customerId;
-  final String? deliveryCompanyId;
+  String? deliveryCompanyId;
   final String? noteDelivery;
   final ShopDataModel? shop;
   final String? shopId;

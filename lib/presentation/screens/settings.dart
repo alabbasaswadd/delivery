@@ -1,376 +1,208 @@
+import 'package:adaptive_theme/adaptive_theme.dart';
 import 'package:delivery/core/constants/colors.dart';
 import 'package:delivery/core/constants/functions.dart';
 import 'package:delivery/core/widgets/my_alert_dialog.dart';
 import 'package:delivery/core/widgets/my_animation.dart';
+import 'package:delivery/core/widgets/my_app_bar.dart';
 import 'package:delivery/core/widgets/my_button.dart';
 import 'package:delivery/core/widgets/my_text.dart';
-import 'package:delivery/presentation/screens/auth/signup.dart';
+import 'package:delivery/presentation/screens/auth/login.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-class SettingsScreen extends StatefulWidget {
-  const SettingsScreen({super.key});
-  static String id = "settingsScreen";
+class Settings extends StatefulWidget {
+  const Settings({super.key});
+  static String id = "settings";
 
   @override
-  State<SettingsScreen> createState() => _SettingsScreenState();
+  State<Settings> createState() => _SettingsState();
 }
 
-class _SettingsScreenState extends State<SettingsScreen> {
-  bool _profileExpanded = true;
-  bool _appSettingsExpanded = true;
-  bool _securityExpanded = true;
-  bool _supportExpanded = true;
-  int notificationCount = 3;
+class _SettingsState extends State<Settings> {
+  bool _isDarkMode = false;
+  String _selectedLanguage = Get.locale?.languageCode ?? "en";
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSettings();
+  }
+
+  Future<void> _loadSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _isDarkMode = prefs.getBool('theme') ?? false;
+      _selectedLanguage = prefs.getString('language') ?? "en";
+    });
+  }
+
+  Future<void> _saveSetting<T>(String key, T value) async {
+    final prefs = await SharedPreferences.getInstance();
+    if (value is bool) {
+      await prefs.setBool(key, value);
+    } else if (value is String) {
+      await prefs.setString(key, value);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-
     return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-          SliverAppBar(
-            expandedHeight: size.height * 0.2,
-            flexibleSpace: FlexibleSpaceBar(
-              title: CairoText(
-                "settings".tr,
-                color: Colors.white,
-              ),
-              centerTitle: true,
-              background: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: const [
-                      Color(0xff5673cc),
-                      Color(0xff76c6f2),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                ),
-                child: SafeArea(
-                  child: Center(
-                    child: Icon(Icons.settings,
-                        size: 70, color: Colors.white.withOpacity(0.8)),
-                  ),
-                ),
-              ),
-            ),
-            actions: [
-              Stack(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.notifications, color: Colors.white),
-                    onPressed: () {
-                      // الذهاب إلى الإشعارات
-                    },
-                  ),
-                  if (notificationCount > 0)
-                    Positioned(
-                      right: 8,
-                      top: 8,
-                      child: Container(
-                        padding: const EdgeInsets.all(2),
-                        decoration: BoxDecoration(
-                          color: Colors.red,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        constraints: const BoxConstraints(
-                          minWidth: 16,
-                          minHeight: 16,
-                        ),
-                        child: Text(
-                          '$notificationCount',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 10,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ],
-          ),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-              child: Column(
-                children: [
-                  // Profile Section
-                  _buildAnimatedSettingsSection(
-                    title: "profile".tr,
-                    expanded: _profileExpanded,
-                    onTap: () =>
-                        setState(() => _profileExpanded = !_profileExpanded),
-                    children: [
-                      _buildSettingsItem(
-                        icon: Icons.person,
-                        title: "personal_info".tr,
-                        onTap: () {
-                          // Navigate to personal info screen
-                        },
-                      ),
-                      _buildSettingsItem(
-                        icon: Icons.phone,
-                        title: "contact_info".tr,
-                        onTap: () {
-                          // Navigate to contact info screen
-                        },
-                      ),
-                      _buildSettingsItem(
-                        icon: Icons.location_on,
-                        title: "addresses".tr,
-                        onTap: () {
-                          // Navigate to addresses screen
-                        },
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-
-                  // App Settings Section
-                  _buildAnimatedSettingsSection(
-                    title: "app_settings".tr,
-                    expanded: _appSettingsExpanded,
-                    onTap: () => setState(
-                        () => _appSettingsExpanded = !_appSettingsExpanded),
-                    children: [
-                      _buildSettingsItem(
-                        icon: Icons.language,
-                        title: "language".tr,
-                        trailing: Row(
-                          children: [
-                            CairoText(
-                              "العربية",
-                              fontSize: 14,
-                              color: Colors.grey[600],
-                            ),
-                            const Icon(Icons.chevron_right, color: Colors.grey),
-                          ],
-                        ),
-                        onTap: () {
-                          // Navigate to language settings
-                        },
-                      ),
-                      _buildSettingsItem(
-                        icon: Icons.notifications,
-                        title: "notifications".tr,
-                        trailing: Switch(
-                          value: true,
-                          activeColor: AppColor.kPrimaryColor,
-                          onChanged: (value) {
-                            // Handle notification toggle
-                          },
-                        ),
-                      ),
-                      _buildSettingsItem(
-                        icon: Icons.dark_mode,
-                        title: "dark_mode".tr,
-                        trailing: Switch(
-                          value: false,
-                          activeColor: AppColor.kPrimaryColor,
-                          onChanged: (value) {
-                            // Handle dark mode toggle
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Security Section
-                  _buildAnimatedSettingsSection(
-                    title: "security".tr,
-                    expanded: _securityExpanded,
-                    onTap: () =>
-                        setState(() => _securityExpanded = !_securityExpanded),
-                    children: [
-                      _buildSettingsItem(
-                        icon: Icons.lock,
-                        title: "change_password".tr,
-                        onTap: () {
-                          // Navigate to change password screen
-                        },
-                      ),
-                      _buildSettingsItem(
-                        icon: Icons.fingerprint,
-                        title: "biometric_auth".tr,
-                        trailing: Switch(
-                          value: true,
-                          activeColor: AppColor.kPrimaryColor,
-                          onChanged: (value) {
-                            // Handle biometric auth toggle
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Support Section
-                  _buildAnimatedSettingsSection(
-                    title: "support".tr,
-                    expanded: _supportExpanded,
-                    onTap: () =>
-                        setState(() => _supportExpanded = !_supportExpanded),
-                    children: [
-                      _buildSettingsItem(
-                        icon: Icons.help_center,
-                        title: "help_center".tr,
-                        onTap: () {
-                          // Navigate to help center
-                        },
-                      ),
-                      _buildSettingsItem(
-                        icon: Icons.contact_support,
-                        title: "contact_us".tr,
-                        onTap: () {
-                          // Navigate to contact us
-                        },
-                      ),
-                      _buildSettingsItem(
-                        icon: Icons.privacy_tip,
-                        title: "privacy_policy".tr,
-                        onTap: () {
-                          // Navigate to privacy policy
-                        },
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Logout Button
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
-                    child: SizedBox(
-                      width: double.infinity,
-                      child: MyAnimation(
-                        scale: 0.85,
-                        child: MyButton(
-                          text: "log_out".tr,
-                          color: Colors.red,
-                          onPressed: () {
-                            showDialog(
-                              context: context,
-                              builder: (context) => MyAlertDialog(
-                                onOk: () {
-                                  UserPreferencesService.clearUser();
-                                  Get.toNamed(SignUp.id);
-                                },
-                                onNo: () {
-                                  Get.back();
-                                },
-                                title: "logout".tr,
-                                content: "هل تريد تسجيل الخروج",
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 30),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAnimatedSettingsSection({
-    required String title,
-    required bool expanded,
-    required VoidCallback onTap,
-    required List<Widget> children,
-  }) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 6,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+      appBar: myAppBar(title: "settings".tr, context: context),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            // Header with arrow icon
-            ListTile(
-              title: CairoText(
-                title,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: AppColor.kPrimaryColor,
-              ),
-              trailing: Icon(
-                expanded ? Icons.expand_less : Icons.expand_more,
-                color: Colors.grey[600],
-              ),
-              onTap: onTap,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-            ),
+            // Account Settings Section
+            _buildSectionHeader("account_settings".tr),
+            _buildSettingTile(
+                icon: Icons.person_outline,
+                title: "username".tr,
+                value: CompanySession.name ?? "",
+                onTap: () {}),
+            _buildSettingTile(
+                icon: Icons.phone_android_outlined,
+                title: "phone".tr,
+                value: CompanySession.phoneNumber ?? "",
+                onTap: () {}),
+            const SizedBox(height: 24),
 
-            // Animated content
-            AnimatedCrossFade(
-              duration: const Duration(milliseconds: 300),
-              crossFadeState: expanded
-                  ? CrossFadeState.showFirst
-                  : CrossFadeState.showSecond,
-              firstChild: Padding(
-                padding: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
-                child: Column(children: children),
-              ),
-              secondChild: Container(),
+            // App Settings Section
+            _buildSectionHeader("app_settings".tr),
+            _buildSettingTile(
+              icon: Icons.language_outlined,
+              title: "language".tr,
+              value: _selectedLanguage == "ar" ? "arabic".tr : "english".tr,
+              onTap: () => _showLanguageBottomSheet(),
             ),
+            _buildSettingTile(
+              onTap: () {},
+              icon: Icons.dark_mode_outlined,
+              title: "dark_mode".tr,
+              trailing: Switch(
+                value: _isDarkMode,
+                onChanged: (value) async {
+                  await _saveSetting('theme', value);
+                  setState(() => _isDarkMode = value);
+                  if (value) {
+                    AdaptiveTheme.of(context).setDark();
+                  } else {
+                    AdaptiveTheme.of(context).setLight();
+                  }
+                },
+                activeColor: AppColor.kPrimaryColor,
+              ),
+            ),
+            Spacer(),
+            _buildLogOutButton(),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildSettingsItem({
+  Widget _buildSectionHeader(String title) {
+    return CairoText(
+      title,
+      color: Colors.grey[600],
+    );
+  }
+
+  Widget _buildSettingTile({
     required IconData icon,
     required String title,
+    String? value,
     Widget? trailing,
-    VoidCallback? onTap,
+    Color? color,
+    required VoidCallback onTap,
   }) {
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
-        child: Row(
+    return Card(
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+        side: BorderSide(color: Colors.grey.withOpacity(0.2), width: 1),
+      ),
+      child: ListTile(
+        leading: Icon(icon, color: color ?? AppColor.kPrimaryColor),
+        title: CairoText(
+          title,
+          fontSize: 11,
+        ),
+        subtitle: value != null ? CairoText(value, fontSize: 11) : null,
+        trailing: trailing ?? Icon(Icons.arrow_forward_ios, size: 16),
+        onTap: onTap,
+      ),
+    );
+  }
+
+  void _showLanguageBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) => Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: AppColor.kPrimaryColor.withOpacity(0.1),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, color: AppColor.kPrimaryColor, size: 20),
+            CairoText(
+              "select_language".tr,
             ),
-            const SizedBox(width: 15),
-            Expanded(
-              child: CairoText(
-                title,
-                fontSize: 15,
-              ),
+            const SizedBox(height: 16),
+            RadioListTile(
+              title: CairoText("arabic".tr),
+              value: "ar",
+              groupValue: _selectedLanguage,
+              onChanged: (value) async {
+                await _saveSetting('language', "ar");
+                Get.updateLocale(const Locale("ar"));
+                setState(() => _selectedLanguage = "ar");
+                Get.back();
+              },
+              activeColor: AppColor.kPrimaryColor,
             ),
-            trailing ?? const Icon(Icons.chevron_right, color: Colors.grey),
+            RadioListTile(
+              title: CairoText("english".tr),
+              value: "en",
+              groupValue: _selectedLanguage,
+              onChanged: (value) async {
+                await _saveSetting('language', "en");
+                Get.updateLocale(const Locale("en"));
+                setState(() => _selectedLanguage = "en");
+                Get.back();
+              },
+              activeColor: AppColor.kPrimaryColor,
+            ),
+            const SizedBox(height: 16),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildLogOutButton() {
+    return MyAnimation(
+      scale: 0.90,
+      child: MyButton(
+          text: "log_out".tr,
+          onPressed: () {
+            showDialog(
+                context: context,
+                builder: (context) => MyAlertDialog(
+                    onOk: () {
+                      Get.offAllNamed(Login.id);
+                      CompanySession.clear();
+                    },
+                    onNo: () {
+                      Get.back();
+                    },
+                    title: "log_out".tr,
+                    content: "do_you_want_to_log_out".tr));
+          },
+          color: Colors.redAccent),
     );
   }
 }

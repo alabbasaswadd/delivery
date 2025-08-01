@@ -1,67 +1,35 @@
+import 'dart:io';
+
 import 'package:bloc/bloc.dart';
 import 'package:delivery/core/api/errors/error_model.dart';
 import 'package:delivery/core/constants/functions.dart';
-import 'package:delivery/data/model/login/login_data_model.dart';
+import 'package:delivery/data/model/delivery/delivery_company_data_model.dart';
+import 'package:delivery/data/model/login/login_request_data_model.dart';
+import 'package:delivery/data/model/login/login_response_data_model.dart';
 import 'package:delivery/data/model/login/login_response_model.dart';
-import 'package:delivery/data/model/register/register_model.dart';
+import 'package:delivery/data/model/register/register_request_data_model.dart';
+import 'package:delivery/data/model/register/register_response_model.dart';
 import 'package:delivery/data/model/user/user_data_model.dart';
 import 'package:delivery/data/repository/repository.dart';
 import 'package:delivery/data/web_services/web_services.dart';
 import 'package:delivery/presentation/business_logic/cubit/auth/auth_state.dart';
 import 'package:dio/dio.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthCubit extends Cubit<AuthState> {
   final Repository repository = Repository(WebServices());
 
   AuthCubit() : super(AuthInit());
 
-  Future<void> signup({
-    required String firstName,
-    required String lastName,
-    required String birthDate,
-    required int gender,
-    required String email,
-    required String phone,
-    required String password,
-    required String city,
-    required String street,
-    required String floor,
-    required String apartment,
-    required bool defaultAddress,
-  }) async {
+  Future<void> signup(RegisterRequestDataModel data, File? logo) async {
     emit(AuthLoading());
 
     try {
-      final response = await repository.signUpRepository({
-        'firstName': firstName,
-        'lastName': lastName,
-        'birthDate': birthDate,
-        'gender': gender,
-        'email': email,
-        'phone': phone,
-        'password': password,
-        'address': {
-          "city": city,
-          "street": street,
-          "floor": floor,
-          "apartment": apartment,
-          "defaultAddress": defaultAddress,
-        }
-      });
-      if (response.data != null) {
-        try {
-          final authResponse = RegisterResponseModel.fromJson(response.data);
-          if (authResponse.succeeded == true) {
-            emit(AuthSignUpSuccess());
-          } else {
-            final errorMessage = _extractFirstError(authResponse.errors) ??
-                authResponse.message ??
-                "حدث خطأ أثناء التسجيل";
-            emit(AuthError(errorMessage));
-          }
-        } catch (e) {
-          emit(AuthError("فشل في تحليل استجابة السيرفر"));
-        }
+      final response = await repository.signUpRepository(data, logo);
+      if (response.statusCode == 200 &&
+          response.data != null &&
+          response.data['succeeded'] == true) {
+        emit(AuthSignUpSuccess());
       } else {
         emit(AuthError("فشل الاتصال بالسيرفر"));
       }
@@ -89,45 +57,33 @@ class AuthCubit extends Cubit<AuthState> {
     return null;
   }
 
-  Future<void> login({required String email, required String password}) async {
+  Future<void> login(LoginRequestDataModel data) async {
     emit(AuthLoading());
 
     try {
-      final response = await repository.loginRepository(email, password);
-
+      final response = await repository.loginRepository(data);
+      print(response.statusCode);
+      print(response.statusMessage);
+      print(response.data);
       if (response.statusCode == 200 &&
           response.data != null &&
           response.data['succeeded'] == true) {
-        final jsonData = response.data;
-        final loginData = LoginDataModel.fromJson(jsonData['data']);
+        final loginResponse = LoginResponseModel.fromJson(response.data);
 
-        final loginResponse = LoginResponseModel.fromJson(jsonData);
-
+        final loginData =
+            LoginResponseDataModel.fromJson(response.data['data']);
         if (loginResponse.succeeded == true && loginResponse.data != null) {
           final token = loginData.token;
-          final customerId = loginData.customerId;
-          await UserPreferencesService.saveToken(token ?? "");
-          final responseDataModel =
-              await repository.getUserRepository(customerId ?? "");
-          final userModel =
-              UserDataModel.fromJson(responseDataModel.data['data']);
-          // var shopping = userModel.data['data'];
-
-          await UserSession.updateUser(userModel);
+          final companyId = loginData.id;
+          await CompanyPreferencesService.saveId(companyId ?? "");
+          CompanySession.id = await CompanyPreferencesService.getId() ?? "";
+          await CompanyPreferencesService.saveToken(token ?? "");
+          final responseCompanyModel =
+              await repository.getDeliveryCompanyByIdRepository();
+          final companyModel = DeliveryCompanyDataModel.fromJson(
+              responseCompanyModel.data['data']);
+          await CompanySession.updateCompany(companyModel);
           emit(AuthAuthenticated());
-        } else {
-          String errorMessage = "حدث خطأ غير معروف";
-
-          if (loginResponse.errors != null &&
-              loginResponse.errors!.errors != null &&
-              loginResponse.errors!.errors!.isNotEmpty) {
-            final firstKey = loginResponse.errors!.errors!.keys.first;
-            final errorList = loginResponse.errors!.errors![firstKey];
-            if (errorList != null && errorList.isNotEmpty) {
-              errorMessage = errorList.first;
-            }
-          }
-          emit(AuthError(errorMessage));
         }
       } else {
         emit(AuthError("فشل الاتصال بالسيرفر."));
@@ -139,7 +95,6 @@ class AuthCubit extends Cubit<AuthState> {
           if (errorData != null && errorData is Map<String, dynamic>) {
             final errorModel = ErrorModel.fromJson(errorData);
 
-            // ✅ استخراج رسالة الخطأ من ErrorModel
             String errorMessage =
                 errorModel.message ?? "خطأ في الاتصال بالسيرفر";
 
@@ -150,7 +105,6 @@ class AuthCubit extends Cubit<AuthState> {
                 errorMessage = errorList.first;
               }
             }
-
             emit(AuthError(errorMessage));
           } else {
             emit(AuthError("فشل في قراءة رسالة الخطأ من السيرفر"));
@@ -159,6 +113,7 @@ class AuthCubit extends Cubit<AuthState> {
           emit(AuthError("خطأ غير متوقع أثناء تحليل رسالة الخطأ"));
         }
       } else {
+        print(e);
         emit(AuthError("حدث خطأ غير متوقع: ${e.toString()}"));
       }
     }
@@ -166,30 +121,22 @@ class AuthCubit extends Cubit<AuthState> {
 
   Future<void> getUserData() async {
     try {
-      final userId = await UserPreferencesService.getUserValue('customerId');
+      final response = await repository.getDeliveryCompanyByIdRepository();
 
-      if (userId != null) {
-        final response = await repository.getUserDataRepository(userId);
-
-        if (response.data != null) {
-          final Map<String, dynamic> json = response.data;
-          final user = UserDataModel.fromJson(json);
-
-          // ✅ تخزين بيانات المستخدم داخل SharedPreferences
-          await UserPreferencesService.saveUser(user.toJson());
-        } else {
-          emit(AuthError("فشل في استرجاع بيانات المستخدم"));
-        }
+      if (response.data != null) {
+        final json = response.data;
+        final deliveryCompany = DeliveryCompanyDataModel.fromJson(json);
+        await CompanyPreferencesService.saveCompany(deliveryCompany.toJson());
       } else {
-        emit(AuthError("لم يتم العثور على معرف المستخدم"));
+        emit(AuthError("فشل في استرجاع بيانات الشركة"));
       }
     } catch (e) {
-      emit(AuthError("حدث خطأ أثناء استرجاع بيانات المستخدم"));
+      emit(AuthError("حدث خطأ أثناء استرجاع بيانات الشركة"));
     }
-  }
 
-  Future<void> logout() async {
-    await UserPreferencesService.clearUser();
-    emit(AuthInit());
+    Future<void> logout() async {
+      await CompanyPreferencesService.clearUser();
+      emit(AuthInit());
+    }
   }
 }

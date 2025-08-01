@@ -1,24 +1,26 @@
 import 'dart:convert';
-import 'package:delivery/data/model/user/user_data_model.dart';
+import 'package:delivery/data/model/delivery/delivery_company_data_model.dart';
+import 'package:delivery/data/model/delivery/delivery_detail_model.dart';
+import 'package:delivery/data/model/delivery/delivery_email_model.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'colors.dart';
 
-class UserPreferencesService {
-  static const String _userKey = 'user_data';
+class CompanyPreferencesService {
+  static const String deliveryKey = 'delivery_data';
 
   // حفظ بيانات المستخدم (JSON String)
-  static Future<void> saveUser(Map<String, dynamic> userJson) async {
+  static Future<void> saveCompany(Map<String, dynamic> companyJson) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_userKey, jsonEncode(userJson));
+    await prefs.setString(deliveryKey, jsonEncode(companyJson));
   }
 
   // استرجاع بيانات المستخدم كخريطة
   static Future<Map<String, dynamic>?> getUser() async {
     final prefs = await SharedPreferences.getInstance();
-    final userString = prefs.getString(_userKey);
+    final userString = prefs.getString(deliveryKey);
     if (userString != null) {
       return jsonDecode(userString);
     }
@@ -30,6 +32,11 @@ class UserPreferencesService {
     await prefs.setString("token", token);
   }
 
+  static Future<void> saveId(String id) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString("id", id);
+  }
+
   static Future<String?> getToken() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString("token");
@@ -39,11 +46,20 @@ class UserPreferencesService {
     return null;
   }
 
+  static Future<String?> getId() async {
+    final prefs = await SharedPreferences.getInstance();
+    final id = prefs.getString("id");
+    if (id != null) {
+      return id;
+    }
+    return null;
+  }
+
   // استرجاع قيمة معينة من بيانات المستخدم
   static Future<String?> getUserValue(String key) async {
-    final user = await getUser();
-    if (user != null && user.containsKey(key)) {
-      return user[key].toString();
+    final deliveryKey = await getUser();
+    if (deliveryKey != null && deliveryKey.containsKey(key)) {
+      return deliveryKey[key].toString();
     }
     return null;
   }
@@ -51,70 +67,73 @@ class UserPreferencesService {
   // حذف بيانات المستخدم
   static Future<void> clearUser() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_userKey);
+    await prefs.remove(deliveryKey);
   }
 
-  // هل المستخدم مسجل دخول؟
   static Future<bool> isLoggedIn() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.containsKey(_userKey);
+    return prefs.containsKey(deliveryKey);
   }
 
   // استرجاع بيانات المستخدم كنموذج UserModel
-  static Future<UserDataModel?> getUserModel() async {
+  static Future<DeliveryCompanyDataModel?> getDeliveryCompanyModel() async {
     final prefs = await SharedPreferences.getInstance();
-    final userString = prefs.getString(_userKey);
-    if (userString != null) {
-      final json = jsonDecode(userString);
-      return UserDataModel.fromJson(json);
+    final deliveryCompany = prefs.getString(deliveryKey);
+    if (deliveryCompany != null) {
+      final json = jsonDecode(deliveryCompany);
+      return DeliveryCompanyDataModel.fromJson(json);
     }
     return null;
   }
 }
 
-class UserSession {
-  static UserDataModel? _user;
+class CompanySession {
+  static DeliveryCompanyDataModel? deliveryCompany;
 
   /// تحميل بيانات المستخدم من SharedPreferences وتخزينها في الذاكرة
   static Future<void> init() async {
-    _user = await UserPreferencesService.getUserModel();
+    deliveryCompany = await CompanyPreferencesService.getDeliveryCompanyModel();
   }
 
   /// كل بيانات المستخدم
-  static UserDataModel? get user => _user;
+  static DeliveryCompanyDataModel? get company => deliveryCompany;
 
-  /// خصائص مباشرة من _user
-  static String? get id => _user?.id;
-  static String? get shoppingCartId => _user?.shoppingCartId;
-  static String? get birthDate => _user?.dateOfBirth;
-  static String? get firstName => _user?.firstName;
-  static String? get lastName => _user?.lastName;
-  static String? get phone => _user?.phone;
-  static String? get emailId => _user?.emailId;
-  static String? get addressId => _user?.addressId;
-  static String? get city => _user?.address?.city;
-  static String? get apartment => _user?.address?.apartment;
-  static String? get street => _user?.address?.street;
-  static String? get floor => _user?.address?.floor;
+  /// خصائص مباشرة من delivery
+  static String? id = "";
+  static String? get name => deliveryCompany?.name;
+  static String? get contactPerson => deliveryCompany?.contactPerson;
+  static String? get phoneNumber => deliveryCompany?.phoneNumber;
+  static DeliveryEmailModel? get email => deliveryCompany?.email;
+  static String? get userName => deliveryCompany?.email?.userName;
+  static String? get password => deliveryCompany?.email?.password;
+  static String? get website => deliveryCompany?.website;
+  static String? get address => deliveryCompany?.address;
+  static dynamic get coverageAreas => deliveryCompany?.coverageAreas;
+  static double? get basePrice => deliveryCompany?.basePrice;
+  static double? get pricePerKm => deliveryCompany?.pricePerKm;
+  static bool? get isActive => deliveryCompany?.isActive;
+  static String? get logoUrl => deliveryCompany?.logoUrl;
+  static List<DeliveryDetailModel>? get deliveries =>
+      deliveryCompany?.deliveries;
 
   // افترض هنا أن email من نوع String، عدل حسب نوعه الحقيقي
-  static String? get email => _user?.email?.userName;
 
   // إذا الجنس عدد صحيح 0 أو 1
 
   /// هل المستخدم مسجل دخول؟
-  static bool get isLoggedIn => _user != null;
+  static bool get isLoggedIn => deliveryCompany != null;
 
   /// تحديث بيانات المستخدم
-  static Future<void> updateUser(UserDataModel userModel) async {
-    _user = userModel;
-    await UserPreferencesService.saveUser(userModel.toJson());
+  static Future<void> updateCompany(
+      DeliveryCompanyDataModel deliveryModel) async {
+    deliveryCompany = deliveryModel;
+    await CompanyPreferencesService.saveCompany(deliveryModel.toJson());
   }
 
   /// تسجيل الخروج
   static Future<void> clear() async {
-    _user = null;
-    await UserPreferencesService.clearUser();
+    deliveryCompany = null;
+    await CompanyPreferencesService.clearUser();
   }
 }
 

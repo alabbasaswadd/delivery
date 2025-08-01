@@ -26,6 +26,7 @@ class _SplashState extends State<Splash> {
   @override
   void initState() {
     super.initState();
+    CompanySession.init();
     _initConnectivity();
     _setupConnectivityListener();
   }
@@ -74,7 +75,8 @@ class _SplashState extends State<Splash> {
     final bool hasSeenOnboarding = prefs.getBool('hasSeenOnboarding') ?? false;
 
     if (hasSeenOnboarding) {
-      if (await UserPreferencesService.isLoggedIn()) {
+      await CompanySession.init();
+      if (await CompanyPreferencesService.isLoggedIn()) {
         Get.offAllNamed(HomeScreen.id);
       } else {
         Get.offAllNamed(SignUp.id);
@@ -90,7 +92,7 @@ class _SplashState extends State<Splash> {
       body: _isCheckingInternet
           ? const Center(child: CircularProgressIndicator())
           : _hasInternet
-              ? Center(child: Image.asset(AppImages.klogo, width: 200))
+              ? Center(child: Image.asset(AppImages.klogo))
               : _NoInternetConnection(),
     );
   }

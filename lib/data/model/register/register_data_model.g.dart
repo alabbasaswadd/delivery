@@ -1,21 +1,21 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'login_data_model.dart';
+part of 'register_data_model.dart';
 
 // **************************************************************************
 // JsonSerializableGenerator
 // **************************************************************************
 
-LoginDataModel _$LoginDataModelFromJson(Map<String, dynamic> json) =>
-    LoginDataModel(
+RegisterDataModel _$RegisterDataModelFromJson(Map<String, dynamic> json) =>
+    RegisterDataModel(
+      id: json['id'] as String?,
       token: json['token'] as String?,
       userName: json['userName'] as String?,
-      customerId: json['customerId'] as String?,
     );
 
-Map<String, dynamic> _$LoginDataModelToJson(LoginDataModel instance) =>
+Map<String, dynamic> _$RegisterDataModelToJson(RegisterDataModel instance) =>
     <String, dynamic>{
+      'id': instance.id,
       'token': instance.token,
       'userName': instance.userName,
-      'customerId': instance.customerId,
     };

@@ -3,6 +3,7 @@ import 'package:delivery/core/widgets/my_button.dart';
 import 'package:delivery/core/widgets/my_snackbar.dart';
 import 'package:delivery/core/widgets/my_text.dart';
 import 'package:delivery/core/widgets/my_text_form_field.dart';
+import 'package:delivery/data/model/login/login_request_data_model.dart';
 import 'package:delivery/presentation/business_logic/cubit/auth/auth_cubit.dart';
 import 'package:delivery/presentation/business_logic/cubit/auth/auth_state.dart';
 import 'package:delivery/presentation/screens/auth/signup.dart';
@@ -158,10 +159,9 @@ class _LoginState extends State<Login> {
                           text: "login".tr,
                           onPressed: () {
                             if (_formKey.currentState!.validate()) {
-                              cubit.login(
-                                email: _emailController.text,
-                                password: _passwordController.text,
-                              );
+                              cubit.login(LoginRequestDataModel(
+                                  email: _emailController.text,
+                                  password: _passwordController.text));
                             }
                           },
                         );

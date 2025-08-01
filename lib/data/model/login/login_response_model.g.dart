@@ -11,7 +11,8 @@ LoginResponseModel _$LoginResponseModelFromJson(Map<String, dynamic> json) =>
       succeeded: json['succeeded'] as bool?,
       data: json['data'] == null
           ? null
-          : LoginDataModel.fromJson(json['data'] as Map<String, dynamic>),
+          : LoginResponseDataModel.fromJson(
+              json['data'] as Map<String, dynamic>),
       errors: json['errors'] == null
           ? null
           : ErrorModel.fromJson(json['errors'] as Map<String, dynamic>),

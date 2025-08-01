@@ -35,7 +35,7 @@ dependencies:
   cached_network_image: ^3.4.1
   qr_flutter: ^4.1.0
   shimmer: ^3.0.0
-  url_launcher: ^6.3.1
+  url_launcher: ^6.2.4
   smooth_page_indicator: ^1.2.1
   connectivity_plus: ^6.1.4
   flutter_native_splash: ^2.4.6

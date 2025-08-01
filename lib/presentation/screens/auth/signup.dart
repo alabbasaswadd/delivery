@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:delivery/core/constants/colors.dart';
 import 'package:delivery/core/constants/const.dart';
 import 'package:delivery/core/constants/functions.dart';
@@ -6,6 +8,7 @@ import 'package:delivery/core/widgets/my_drop_down_button.dart';
 import 'package:delivery/core/widgets/my_snackbar.dart';
 import 'package:delivery/core/widgets/my_text.dart';
 import 'package:delivery/core/widgets/my_text_form_field.dart';
+import 'package:delivery/data/model/register/register_request_data_model.dart';
 import 'package:delivery/presentation/business_logic/cubit/auth/auth_cubit.dart'
     show AuthCubit;
 import 'package:delivery/presentation/business_logic/cubit/auth/auth_state.dart';
@@ -15,6 +18,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
 
 class SignUp extends StatefulWidget {
   const SignUp({super.key});
@@ -25,8 +29,20 @@ class SignUp extends StatefulWidget {
 }
 
 class _SignUpState extends State<SignUp> {
+  File? selectedImage;
+  final ImagePicker _picker = ImagePicker();
+
+  Future<void> pickImage() async {
+    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      setState(() {
+        selectedImage = File(pickedFile.path);
+      });
+    }
+  }
+
   // Controllers
-  final TextEditingController firstNameController = TextEditingController();
+  final TextEditingController nameController = TextEditingController();
   final TextEditingController lastNameController = TextEditingController();
   final TextEditingController contactPersonController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
@@ -40,11 +56,7 @@ class _SignUpState extends State<SignUp> {
   final TextEditingController logoController = TextEditingController();
   final TextEditingController confirmPasswordController =
       TextEditingController();
-  final TextEditingController cityController = TextEditingController();
-  final TextEditingController streetController = TextEditingController();
-  final TextEditingController floorController = TextEditingController();
-  final TextEditingController apartmentController = TextEditingController();
-
+  final TextEditingController addressController = TextEditingController();
   int gender = 0;
   bool defaultAddress = true;
   bool _obscurePassword = true;
@@ -186,8 +198,8 @@ class _SignUpState extends State<SignUp> {
 
           // Name Row
           MyTextFormField(
-              controller: firstNameController,
-              label: "first_name".tr,
+              controller: nameController,
+              label: "name".tr,
               icon: Icons.person_outline,
               validator: (value) =>
                   value!.isEmpty ? 'required_filed'.tr : null),
@@ -360,7 +372,7 @@ class _SignUpState extends State<SignUp> {
           const SizedBox(height: 20),
 
           MyTextFormField(
-            controller: cityController,
+            controller: addressController,
             label: "city".tr,
             icon: Icons.location_city,
             validator: (value) => value!.isEmpty ? 'required_filed'.tr : null,
@@ -368,38 +380,12 @@ class _SignUpState extends State<SignUp> {
           const SizedBox(height: 15),
 
           MyTextFormField(
-            controller: streetController,
-            label: "street".tr,
+            controller: coverageAreasController,
+            label: "coverage_areas".tr,
             icon: Icons.streetview,
-            validator: (value) => value!.isEmpty ? 'required_filed'.tr : null,
+            // validator: (value) => value!.isEmpty ? 'required_filed'.tr : null,
           ),
           const SizedBox(height: 15),
-
-          Row(
-            children: [
-              Expanded(
-                child: MyTextFormField(
-                  controller: floorController,
-                  label: "floor".tr,
-                  icon: Icons.meeting_room,
-                  keyboardType: TextInputType.number,
-                  validator: (value) =>
-                      value!.isEmpty ? 'required_filed'.tr : null,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: MyTextFormField(
-                  controller: apartmentController,
-                  label: "apartment".tr,
-                  icon: Icons.home_outlined,
-                  keyboardType: TextInputType.number,
-                  validator: (value) =>
-                      value!.isEmpty ? 'required_filed'.tr : null,
-                ),
-              ),
-            ],
-          ),
         ],
       ),
     );
@@ -419,12 +405,7 @@ class _SignUpState extends State<SignUp> {
             icon: Icons.person_outline,
             validator: (value) => value!.isEmpty ? 'required_filed'.tr : null,
           ),
-          MyTextFormField(
-            controller: coverageAreasController,
-            label: "coverage_areas".tr,
-            icon: Icons.person_outline,
-            validator: (value) => value!.isEmpty ? 'required_filed'.tr : null,
-          ),
+
           MyTextFormField(
             controller: basePriceController,
             label: "base_price".tr,
@@ -437,21 +418,22 @@ class _SignUpState extends State<SignUp> {
             icon: Icons.person_outline,
             validator: (value) => value!.isEmpty ? 'required_filed'.tr : null,
           ),
-          // Text("تحميل صورة", style: TextStyle(fontWeight: FontWeight.bold)),
-          // GestureDetector(
-          //   onTap: pickImage,
-          //   child: Container(
-          //     height: 150,
-          //     width: double.infinity,
-          //     decoration: BoxDecoration(
-          //       border: Border.all(color: Colors.grey),
-          //       borderRadius: BorderRadius.circular(8),
-          //     ),
-          //     child: selectedImage != null
-          //         ? Image.file(selectedImage!, fit: BoxFit.cover)
-          //         : Center(child: Text("اضغط لاختيار صورة")),
-          //   ),
-          // ),
+          CairoText("logo".tr, color: AppColor.kPrimaryColor),
+          const SizedBox(height: 10),
+          GestureDetector(
+            onTap: pickImage,
+            child: Container(
+              height: 150,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: selectedImage != null
+                  ? Image.file(selectedImage!, fit: BoxFit.cover)
+                  : Center(child: CairoText("tapToPickImage".tr)),
+            ),
+          ),
           const SizedBox(height: 20),
         ],
       ),
@@ -478,7 +460,10 @@ class _SignUpState extends State<SignUp> {
             children: [
               Expanded(
                 child: MyButton(
-                    color: AppColor.kThirtColor,
+                    color:
+                        Theme.of(context).colorScheme.onSurface == Colors.white
+                            ? AppColor.kSecondColorDarkMode
+                            : Colors.grey.shade100,
                     textColor: AppColor.kPrimaryColor,
                     text: "back".tr,
                     onPressed: () {
@@ -523,7 +508,10 @@ class _SignUpState extends State<SignUp> {
                     children: [
                       Expanded(
                         child: MyButton(
-                            color: AppColor.kThirtColor,
+                            color: Theme.of(context).colorScheme.onSurface ==
+                                    Colors.white
+                                ? AppColor.kSecondColorDarkMode
+                                : Colors.grey.shade100,
                             textColor: AppColor.kPrimaryColor,
                             text: "back".tr,
                             onPressed: () {
@@ -540,19 +528,21 @@ class _SignUpState extends State<SignUp> {
                           onPressed: () {
                             if (_stepThreeFormKey.currentState!.validate()) {
                               cubit.signup(
-                                firstName: firstNameController.text,
-                                lastName: lastNameController.text,
-                                birthDate: birthDateController.text,
-                                gender: gender,
-                                email: emailController.text,
-                                phone: phoneController.text,
-                                password: passwordController.text,
-                                city: cityController.text,
-                                street: streetController.text,
-                                floor: floorController.text,
-                                apartment: apartmentController.text,
-                                defaultAddress: defaultAddress,
-                              );
+                                  RegisterRequestDataModel(
+                                    name: nameController.text,
+                                    contactPerson: contactPersonController.text,
+                                    phoneNumber: phoneController.text,
+                                    website: webSiteController.text,
+                                    email: emailController.text,
+                                    password: passwordController.text,
+                                    address: addressController.text,
+                                    coverageAreas: coverageAreasController.text,
+                                    basePrice:
+                                        double.parse(basePriceController.text),
+                                    pricePerKm:
+                                        double.parse(pricePerKmController.text),
+                                  ),
+                                  selectedImage);
                             }
                           },
                         ),

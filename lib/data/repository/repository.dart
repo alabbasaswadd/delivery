@@ -1,4 +1,8 @@
+import 'dart:io';
+import 'package:delivery/data/model/delivery/delivery_detail_model.dart';
+import 'package:delivery/data/model/login/login_request_data_model.dart';
 import 'package:delivery/data/model/order/order_data_model.dart';
+import 'package:delivery/data/model/register/register_request_data_model.dart';
 import 'package:delivery/data/model/user/user_data_model.dart';
 import 'package:delivery/data/web_services/web_services.dart';
 import 'package:dio/dio.dart';
@@ -7,18 +11,14 @@ class Repository {
   final WebServices webServices;
   Repository(this.webServices);
 
-  signUpRepository(Map<String, dynamic> data) async {
-    try {
-      final response = await webServices.signUpWebService(data);
-      return response;
-    } catch (e) {
-      print('خطأ في المستودع (Repository): $e');
-      return null;
-    }
+  Future<Response> signUpRepository(
+      RegisterRequestDataModel data, File? logo) async {
+    final response = await webServices.signUpWebService(data, logo);
+    return response;
   }
 
-  Future<Response> loginRepository(String email, String password) async {
-    final response = await webServices.loginWebServices(email, password);
+  Future<Response> loginRepository(LoginRequestDataModel data) async {
+    final response = await webServices.loginWebServices(data);
     return response;
   }
 
@@ -35,23 +35,36 @@ class Repository {
     return webServices.updateUserWebServices(userId, user);
   }
 
-  Future<Response> deleteUserRepository(String userId) {
-    return webServices.deleteUserWebServices(userId);
+  Future<Response> deleteCompanyRepository() {
+    return webServices.deleteCompanyWebServices();
   }
 
   Future<Response> addOrderRepository(OrderDataModel dataOrder) {
     return webServices.addOrderWebServices(dataOrder);
   }
 
-  Future<Response> getOrdersRepository() {
-    return webServices.getOrdersWebServices();
+  Future<Response> getDeliveriesRepository() {
+    return webServices.getDeliveriesWebServices();
   }
 
   Future<Response> updateOrderRepository(String orderId, OrderDataModel data) {
     return webServices.updateOrderWebServices(orderId, data);
   }
 
+  Future<Response> updateDeliveryRepository(
+      String orderId, DeliveryDetailModel data) {
+    return webServices.updateDeliveryWebServices(orderId, data);
+  }
+
   Future<Response> deleteOrderRepository(String orderId) {
     return webServices.deleteOrderWebServices(orderId);
+  }
+
+  Future<Response> getDeliveryCompaniesRepository() {
+    return webServices.getDeliveryCompaniesWebServices();
+  }
+
+  Future<Response> getDeliveryCompanyByIdRepository() {
+    return webServices.getDeliveryCompanyByIdWebServices();
   }
 }
