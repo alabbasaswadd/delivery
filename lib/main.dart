@@ -14,7 +14,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 late String savedLanguage;
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   await CompanySession.init(); // تحميل بيانات المستخدم من SharedPreferences
   SharedPreferences prefs = await SharedPreferences.getInstance();
   savedLanguage = prefs.getString('language') ?? 'ar';

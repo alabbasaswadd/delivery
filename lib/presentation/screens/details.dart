@@ -322,7 +322,7 @@ class _deliveryDetailsState extends State<deliveryDetails> {
                   deliveryCubit.updateDelivery(
                       widget.delivery.id ?? "", widget.delivery);
                   MySnackbar.showSuccess(context, "orderStatusUpdated".tr);
-                  await deliveryCubit.getDeliveries();
+                  deliveryCubit.getDeliveries();
                   Get.back();
                 } else {
                   MySnackbar.showError(context, "pleaseSelectOrderStatus".tr);

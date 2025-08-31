@@ -107,7 +107,7 @@ class WebServices {
     final deliveryCompanyId = CompanySession.id ?? '';
     final response = await dio.get(
       '$baseUrl$getDeliveries',
-      queryParameters: {"companyId": "13e2e2d3-00a5-4214-34fe-08ddcd039c82"},
+      queryParameters: {"companyId": deliveryCompanyId},
       options: Options(headers: {"Authorization": "Bearer $token"}),
     );
     return response;
